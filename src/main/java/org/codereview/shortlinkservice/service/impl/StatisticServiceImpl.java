@@ -51,7 +51,8 @@ public class StatisticServiceImpl implements StatisticService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ShortLinkDto getShortLinkStat(String shortLink) {
         log.info("get statistic for link: {}", shortLink);
-        var shortLinkEntity = repository.findByLink(shortLink).orElseThrow();
+        var shortLinkEntity = repository.findByLink(shortLink).orElseThrow(() ->
+                new NoSuchElementException("not found short link " + shortLink));
         long rank = repository.getRankByLink(shortLink);
 
         return ShortLinkDto.builder()
@@ -72,25 +73,33 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<ShortLinkDto> getStatisticByPage(int page, int count) {
-        log.info("get statistic for page: {}, and count: {}", page, count);
+        log.info("get statistic for page: {}, and count in page: {}", page, count);
         if (page <= 0 || count > 100 || count <= 0) {
-            log.info("Illegal arguments");
             throw new IllegalArgumentException("проверьте аргументы page: " + page + " и count: " + count);
         }
 
-        Pageable pageRequest = PageRequest.of(page - 1, count, Sort.by("count").descending());
-        Page<ShortLinkEntity> shortLinkEntitiesForPage = repository.findAll(pageRequest);
+        var shortLinkByPage = getShortLinkByPage(page, count);
 
+        return mapPageToListDto(shortLinkByPage, page, count);
+    }
+
+    private Page<ShortLinkEntity> getShortLinkByPage(int page, int count) {
+        Pageable pageRequest = PageRequest.of(page - 1, count, Sort.by("count").descending());
+
+        return repository.findAll(pageRequest);
+    }
+
+    private List<ShortLinkDto> mapPageToListDto(Page<ShortLinkEntity> shortLinkByPage, int page, int count) {
         var startRank = ((page - 1) * count) + 1;
-        var statisticForPage = new ArrayList<ShortLinkDto>();
-        for (ShortLinkEntity shortLinkEntity : shortLinkEntitiesForPage.getContent()) {
-            statisticForPage.add(ShortLinkDto.builder()
+        var statisticForPageDto = new ArrayList<ShortLinkDto>();
+        for (ShortLinkEntity shortLinkEntity : shortLinkByPage.getContent()) {
+            statisticForPageDto.add(ShortLinkDto.builder()
                     .link(shortLinkEntity.getLink())
                     .original(shortLinkEntity.getOriginal())
                     .count(shortLinkEntity.getCount())
                     .rank(startRank++)
                     .build());
         }
-        return statisticForPage;
+        return statisticForPageDto;
     }
 }

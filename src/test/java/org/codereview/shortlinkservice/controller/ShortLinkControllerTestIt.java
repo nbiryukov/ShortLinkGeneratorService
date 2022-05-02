@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.codereview.shortlinkservice.IntegrationTestBase;
 import org.codereview.shortlinkservice.domain.ShortLinkEntity;
 import org.codereview.shortlinkservice.domain.repository.ShortLinkRepository;
+import org.codereview.shortlinkservice.dto.RequestGenerateShortLinkDto;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.HashMap;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.any;
@@ -40,24 +40,14 @@ public class ShortLinkControllerTestIt extends IntegrationTestBase {
 
     @Test
     public void testGenerateNewLinkSuccess() throws Exception {
-        var requestMap = new HashMap<String, String>();
-        requestMap.put("original", "originalurl");
+        var request = new RequestGenerateShortLinkDto();
+        request.setOriginal("originalurl");
         this.mockMvc.perform(post("/generate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(requestMap)))
+                        .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.link", is(any(String.class))));
-    }
-
-    @Test
-    public void testGenerateNewLinkBadRequest() throws Exception {
-        var requestMap = new HashMap<String, String>();
-        requestMap.put("originalBadParam", "originalurl");
-        this.mockMvc.perform(post("/generate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(requestMap)))
-                .andExpect(status().isBadRequest());
     }
 
     @Test

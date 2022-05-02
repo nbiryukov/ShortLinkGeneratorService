@@ -60,7 +60,8 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Transactional
     public String getOriginalLink(String shortLink) {
         log.info("get original by link: {}", shortLink);
-        var shortLinkEntity = repository.findByLink(shortLink).orElseThrow();
+        var shortLinkEntity = repository.findByLink(shortLink).orElseThrow(() ->
+                new NoSuchElementException("not found short link " + shortLink));
         return shortLinkEntity.getOriginal();
     }
 }

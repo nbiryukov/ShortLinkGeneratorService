@@ -37,12 +37,7 @@ public class StatisticController {
     @GetMapping("/stats/{shortLink}")
     public ResponseEntity<ShortLinkDto> getStatsByShortLink(@PathVariable String shortLink) {
         log.info("request get statistic for link: {}", shortLink);
-        try {
-            return new ResponseEntity<>(statisticService.getShortLinkStat(shortLink), HttpStatus.OK);
-        } catch (NoSuchElementException e) {
-            log.info("not found statistic by link: {}", shortLink);
-            return new ResponseEntity<>(new ShortLinkDto(), HttpStatus.NOT_FOUND);
-        }
+        return new ResponseEntity<>(statisticService.getShortLinkStat(shortLink), HttpStatus.OK);
     }
 
     /**
@@ -56,11 +51,6 @@ public class StatisticController {
     public ResponseEntity<List<ShortLinkDto>> getStatsByPage(@RequestParam @Min(1) int page,
                                                              @RequestParam @Min(1) @Max(100) int count) {
         log.info("request get statistic for page: {} and count: {}", page, count);
-        try {
-            return new ResponseEntity<>(statisticService.getStatisticByPage(page, count), HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            log.info("bag request");
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(statisticService.getStatisticByPage(page, count), HttpStatus.OK);
     }
 }
